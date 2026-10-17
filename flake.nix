@@ -6,7 +6,7 @@
     };
 
     templates.java-antlr = {
-      path = ./java;
+      path = ./java-antlr;
       description = "default java shell";
     };
     
