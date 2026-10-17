@@ -62,7 +62,7 @@
             ++ config.pre-commit.settings.enabledPackages;
           shellHook = ''
             ${config.pre-commit.installationScript}
-            echo ${shellHookMsg}
+            echo '${shellHookMsg}'
           '';
         };
       };
