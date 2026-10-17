@@ -1,1 +1,6 @@
 .direnv/
+.pre-commit-config.yaml
+result
+__pycache__/
+.pytest_cache/
+.ruff_cache/
