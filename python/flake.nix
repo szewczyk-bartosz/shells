@@ -30,9 +30,12 @@
         lib,
         ...
       }: let
-        useTests = true;
+        useTests = false;
         shellHookMsg = ''
-          Default python dev shell! (change this if you want)
+          echo 'Python dev shell'
+          echo '  pytest           run tests (if enabled)'
+          echo '  ruff check       lint'
+          echo '  nix fmt          format everything'
         '';
 
         python = pkgs.python3.withPackages (ps:

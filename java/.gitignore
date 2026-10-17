@@ -1,0 +1,8 @@
+.direnv/
+.pre-commit-config.yaml
+result
+.gradle/
+build/
+.idea/
+*.iml
+out/
