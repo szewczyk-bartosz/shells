@@ -10,6 +10,11 @@
       description = "default java shell";
     };
     
+    templates.marimo = {
+      path = ./marimo;
+      description = "default java shell";
+    };
+
     templates.python = {
       path = ./python;
       description = "default python shell";
