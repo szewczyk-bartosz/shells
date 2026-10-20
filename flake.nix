@@ -12,7 +12,7 @@
     
     templates.marimo = {
       path = ./marimo;
-      description = "default java shell";
+      description = "marimo shell for quick python stuff";
     };
 
     templates.python = {
