@@ -12,9 +12,19 @@
         matplotlib
         seaborn
       ]);
+    shellHookMsg = ''
+      ===
+      Marimo Dev shell loaded!
+      Start with: marimo run [filename]
+      ===
+      '';
   in {
     devShells.x86_64-linux.default = pkgs.mkShell {
       packages = [python];
+
+    shellHook = ''
+      echo '${shellHookMsg}'
+    '';
     };
   };
 }
