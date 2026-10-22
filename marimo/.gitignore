@@ -6,3 +6,5 @@ __pycache__/
 __marimo__/
 *.png
 *.html
+.pre-commit-config.yaml
+.ruff_cache/
