@@ -7,7 +7,7 @@
 
     templates.java-antlr = {
       path = ./java-antlr;
-      description = "default java shell";
+      description = "java shell with antlr parser generation";
     };
     
     templates.marimo = {
