@@ -19,5 +19,10 @@
       path = ./python;
       description = "default python shell";
     };
+
+    templates.pnpm = {
+      path = ./pnpm;
+      description = "starter pnpm template";
+    };
   };
 }
