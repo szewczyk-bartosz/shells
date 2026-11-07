@@ -2,68 +2,113 @@
   description = "pnpm + Vite project";
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-26.05";
-    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    git-hooks-nix = {
+      url = "github:cachix/git-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = {
+  outputs = inputs @ {
     self,
-    nixpkgs,
-    flake-utils,
+    flake-parts,
+    ...
   }: let
     name = "my-site";
   in
-    flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
-      pnpm = pkgs.pnpm_10.override { nodejs-slim = pkgs.nodejs_26; };
-    in {
-      devShells.default = pkgs.mkShell {
-        packages = [pkgs.nodejs_26 pnpm];
-        shellHook = ''
-          if [ -n "$WEB_DEV_SHELL" ]; then
-            echo "WARNING!!!!"
-            echo "ALREADY IN A SHELL"
-            echo "WARNING!!!!"
-            exit
-          fi
-          export WEB_DEV_SHELL=1
-          echo "${name} dev shell loaded! Run pnpm dev to start the dev server."
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
+
+      imports = [
+        inputs.treefmt-nix.flakeModule
+        inputs.git-hooks-nix.flakeModule
+      ];
+
+      perSystem = {
+        config,
+        pkgs,
+        ...
+      }: let
+        nodejs = pkgs.nodejs_26;
+        pnpm = pkgs.pnpm_10.override {nodejs-slim = nodejs;};
+        shellHookMsg = ''
+          echo '==== ${name} dev shell ===='
+          echo '  pnpm install   install dependencies'
+          echo '  pnpm dev       start the dev server'
+          echo '  pnpm build     build into dist/'
+          echo '  nix fmt        format everything'
         '';
-      };
-
-      packages.default = pkgs.stdenv.mkDerivation (finalAttrs: {
-        pname = name;
-        version = "1.0.0";
-        src = ./.;
-
-        nativeBuildInputs = with pkgs; [
-          nodejs_26
-          pnpmConfigHook
-          pnpm
-        ];
-
-        pnpmDeps = pkgs.fetchPnpmDeps {
-          inherit (finalAttrs) src pname;
-          inherit pnpm;
-          fetcherVersion = 4;
-          hash = pkgs.lib.fakeHash;
+      in {
+        treefmt.programs = {
+          nixfmt.enable = true;
+          prettier.enable = true;
         };
 
-        buildPhase = ''
-          runHook preBuild
-          pnpm run build
-          runHook postBuild
-        '';
+        pre-commit.check.enable = false;
 
-        installPhase = ''
-          runHook preInstall
-          cp -r dist $out
-          runHook postInstall
-        '';
-      });
-    })
-    // {
-      nixosModules.default = {
+        devShells.default = pkgs.mkShell {
+          packages =
+            [
+              nodejs
+              pnpm
+            ]
+            ++ config.pre-commit.settings.enabledPackages;
+          shellHook = ''
+            if [ -n "$WEB_DEV_SHELL" ]; then
+              echo "WARNING!!!!"
+              echo "ALREADY IN A SHELL"
+              echo "WARNING!!!!"
+              exit
+            fi
+            export WEB_DEV_SHELL=1
+            ${config.pre-commit.installationScript}
+            ${shellHookMsg}
+          '';
+        };
+
+        packages.default = pkgs.stdenv.mkDerivation (finalAttrs: {
+          pname = name;
+          version = "1.0.0";
+          src = ./.;
+
+          nativeBuildInputs = [
+            nodejs
+            pkgs.pnpmConfigHook
+            pnpm
+          ];
+
+          # Needs pnpm-lock.yaml. Run `pnpm install`, then `nix build` once and
+          # paste the hash it reports in place of fakeHash.
+          pnpmDeps = pkgs.fetchPnpmDeps {
+            inherit (finalAttrs) src pname;
+            inherit pnpm;
+            fetcherVersion = 4;
+            hash = pkgs.lib.fakeHash;
+          };
+
+          buildPhase = ''
+            runHook preBuild
+            pnpm run build
+            runHook postBuild
+          '';
+
+          installPhase = ''
+            runHook preInstall
+            cp -r dist $out
+            runHook postInstall
+          '';
+        });
+      };
+
+      flake.nixosModules.default = {
         config,
         lib,
         pkgs,
