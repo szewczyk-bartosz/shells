@@ -24,5 +24,10 @@
       path = ./pnpm;
       description = "starter pnpm template";
     };
+
+    templates.rust = {
+      path = ./rust;
+      description = "default rust shell";
+    };
   };
 }
